@@ -169,13 +169,21 @@ namespace Microsoft.AspNetCore.Hosting.StaticWebAssets
         private readonly IFileProvider[] _fileProviders;
         private readonly StaticWebAssetNode _root;
 
-        public ManifestStaticWebAssetFileProvider(StaticWebAssetManifest manifest, Func<string, IFileProvider> fileProviderFactory)
+        public ManifestStaticWebAssetFileProvider(StaticWebAssetManifest manifest, Func<string, IFileProvider> fileProviderFactory, bool skipExistenceCheck = false)
         {
             _fileProviders = new IFileProvider[manifest.ContentRoots.Length];
 
-            for (int i = 0; i < manifest.ContentRoots.Length; i++)
+            for (var i = 0; i < manifest.ContentRoots.Length; i++)
             {
-                _fileProviders[i] = fileProviderFactory(manifest.ContentRoots[i]);
+                // Workaround for https://github.com/dotnet/sdk/pull/19080
+                // The wwwroot folder does not exist in some of our test projects
+                // but we still add a discovery pattern for it, this is fixed in
+                // the SDK however until it flow here, we check for the existing
+                // of the folder before we try to create a provider.
+                if (skipExistenceCheck || Directory.Exists(manifest.ContentRoots[i]))
+                {
+                    _fileProviders[i] = fileProviderFactory(manifest.ContentRoots[i]);
+                }
             }
 
             _root = manifest.Root;

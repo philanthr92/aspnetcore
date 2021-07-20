@@ -61,7 +61,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("_content/RazorClassLibrary/file.version.js");
@@ -77,7 +77,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("");
@@ -94,7 +94,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("_content/RazorClassLibrary/js/project-transitive-dep.js");
@@ -145,7 +145,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("_content/RazorClassLibrary/styles.css");
@@ -160,7 +160,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("_content");
@@ -175,7 +175,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("_content/RazorClassLibrary/js");
@@ -190,7 +190,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var file = fileProvider.GetFileInfo("_content/RazorClassLibrary/different");
@@ -206,7 +206,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var contents = fileProvider.GetDirectoryContents("");
@@ -221,7 +221,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var contents = fileProvider.GetDirectoryContents("_content/NonExisting");
@@ -236,7 +236,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var contents = fileProvider.GetDirectoryContents("_content");
@@ -254,7 +254,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var contents = fileProvider.GetDirectoryContents("_content/RazorClassLibrary/js");
@@ -370,7 +370,7 @@ namespace Microsoft.AspNetCore.Hosting.Tests.StaticWebAssets
         {
             var (manifest, factory) = CreateTestManifest();
 
-            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory);
+            var fileProvider = new ManifestStaticWebAssetFileProvider(manifest, factory, skipExistenceCheck: true);
 
             // Act
             var contents = fileProvider.GetDirectoryContents("_content/RazorClassLibrary");

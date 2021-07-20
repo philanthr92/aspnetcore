@@ -13,4 +13,18 @@
   <ItemGroup>
     <Reference Include="Microsoft.AspNetCore.Components.WebAssembly" />
   </ItemGroup>
+
+  <Target Name="_SkipXmlDocFiles" BeforeTargets="_ResolveBlazorWasmOutputs">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.Extension)' == '.xml'"></ReferenceCopyLocalPaths>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_FixUpDotnetJsFile" BeforeTargets="_ResolveBlazorWasmOutputs" AfterTargets="_ScrambleDotnetJsFileName">
+    <ItemGroup>
+      <_BlazorStaticWebAsset Include="@(_DotnetJsStaticWebAsset)" />
+      <_DotnetJsStaticWebAsset Remove="@(_DotnetJsStaticWebAsset)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

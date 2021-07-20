@@ -16,4 +16,25 @@
     <ProjectReference Include="..\Wasm.Authentication.Shared\Wasm.Authentication.Shared.csproj" />
   </ItemGroup>
 
+  <Target Name="_FixupNpmProjItem" BeforeTargets="ResolveReferencedProjectsStaticWebAssets" AfterTargets="ResolveProjectReferences">
+    <ItemGroup>
+      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.MSBuildSourceProjectFile)' == ''">
+        <MSBuildSourceProjectFile>$([System.IO.Path]::GetFullPath('%(_MSBuildProjectReferenceExistent.Identity)'))</MSBuildSourceProjectFile>
+      </_MSBuildProjectReferenceExistent>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SkipXmlDocFiles" BeforeTargets="_ResolveBlazorWasmOutputs">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.Extension)' == '.xml'"></ReferenceCopyLocalPaths>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_FixUpDotnetJsFile" BeforeTargets="_ResolveBlazorWasmOutputs" AfterTargets="_ScrambleDotnetJsFileName">
+    <ItemGroup>
+      <_BlazorStaticWebAsset Include="@(_DotnetJsStaticWebAsset)" />
+      <_DotnetJsStaticWebAsset Remove="@(_DotnetJsStaticWebAsset)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
