@@ -22,7 +22,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         public async Task CreateRequestStream_RequestCompleted_Disposed()
         {
             var appCompletedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            await Http3.InitializeConnectionAsync(async context =>
+            await Http3Api.InitializeConnectionAsync(async context =>
             {
                 var buffer = new byte[16 * 1024];
                 var received = 0;
@@ -35,10 +35,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 await appCompletedTcs.Task;
             });
 
-            await Http3.CreateControlStream();
-            await Http3.GetInboundControlStream();
+            await Http3Api.CreateControlStream();
+            await Http3Api.GetInboundControlStream();
 
-            var requestStream = await Http3.CreateRequestStream();
+            var requestStream = await Http3Api.CreateRequestStream();
 
             var headers = new[]
             {
@@ -64,17 +64,17 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [Fact]
         public async Task GracefulServerShutdownClosesConnection()
         {
-            await Http3.InitializeConnectionAsync(_echoApplication);
+            await Http3Api.InitializeConnectionAsync(_echoApplication);
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             await inboundControlStream.ExpectSettingsAsync();
 
             // Trigger server shutdown.
-            Http3.CloseConnectionGracefully();
+            Http3Api.CloseConnectionGracefully();
 
-            Assert.Null(await Http3.MultiplexedConnectionContext.AcceptAsync().DefaultTimeout());
+            Assert.Null(await Http3Api.MultiplexedConnectionContext.AcceptAsync().DefaultTimeout());
 
-            await Http3.WaitForConnectionStopAsync(0, false, expectedErrorCode: Http3ErrorCode.NoError);
+            await Http3Api.WaitForConnectionStopAsync(0, false, expectedErrorCode: Http3ErrorCode.NoError);
         }
 
         [Theory]
@@ -85,17 +85,17 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [InlineData(0x5)]
         public async Task SETTINGS_ReservedSettingSent_ConnectionError(long settingIdentifier)
         {
-            await Http3.InitializeConnectionAsync(_echoApplication);
+            await Http3Api.InitializeConnectionAsync(_echoApplication);
 
-            var outboundcontrolStream = await Http3.CreateControlStream();
+            var outboundcontrolStream = await Http3Api.CreateControlStream();
             await outboundcontrolStream.SendSettingsAsync(new List<Http3PeerSetting>
             {
                 new Http3PeerSetting((Http3SettingType) settingIdentifier, 0) // reserved value
             });
 
-            await Http3.GetInboundControlStream();
+            await Http3Api.GetInboundControlStream();
 
-            await Http3.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
+            await Http3Api.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
                 ignoreNonGoAwayFrames: true,
                 expectedLastStreamId: 0,
                 expectedErrorCode: Http3ErrorCode.SettingsError,
@@ -108,12 +108,12 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [InlineData(3, "decoder")]
         public async Task InboundStreams_CreateMultiple_ConnectionError(int streamId, string name)
         {
-            await Http3.InitializeConnectionAsync(_noopApplication);
+            await Http3Api.InitializeConnectionAsync(_noopApplication);
 
-            await Http3.CreateControlStream(streamId);
-            await Http3.CreateControlStream(streamId);
+            await Http3Api.CreateControlStream(streamId);
+            await Http3Api.CreateControlStream(streamId);
 
-            await Http3.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
+            await Http3Api.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
                 ignoreNonGoAwayFrames: true,
                 expectedLastStreamId: 0,
                 expectedErrorCode: Http3ErrorCode.StreamCreationError,
@@ -126,14 +126,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [InlineData(nameof(Http3FrameType.PushPromise))]
         public async Task ControlStream_ClientToServer_UnexpectedFrameType_ConnectionError(string frameType)
         {
-            await Http3.InitializeConnectionAsync(_noopApplication);
+            await Http3Api.InitializeConnectionAsync(_noopApplication);
 
-            var controlStream = await Http3.CreateControlStream();
+            var controlStream = await Http3Api.CreateControlStream();
 
             var f = Enum.Parse<Http3FrameType>(frameType);
             await controlStream.SendFrameAsync(f, Memory<byte>.Empty);
 
-            await Http3.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
+            await Http3Api.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
                 ignoreNonGoAwayFrames: true,
                 expectedLastStreamId: 0,
                 expectedErrorCode: Http3ErrorCode.UnexpectedFrame,
@@ -143,14 +143,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [Fact]
         public async Task ControlStream_ClientToServer_ClientCloses_ConnectionError()
         {
-            await Http3.InitializeConnectionAsync(_noopApplication);
+            await Http3Api.InitializeConnectionAsync(_noopApplication);
 
-            var controlStream = await Http3.CreateControlStream(id: 0);
+            var controlStream = await Http3Api.CreateControlStream(id: 0);
             await controlStream.SendSettingsAsync(new List<Http3PeerSetting>());
 
             await controlStream.EndStreamAsync();
 
-            await Http3.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
+            await Http3Api.WaitForConnectionErrorAsync<Http3ConnectionErrorException>(
                 ignoreNonGoAwayFrames: true,
                 expectedLastStreamId: 0,
                 expectedErrorCode: Http3ErrorCode.ClosedCriticalStream,
@@ -160,9 +160,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [Fact]
         public async Task ControlStream_ServerToClient_ErrorInitializing_ConnectionError()
         {
-            Http3.OnCreateServerControlStream = testStreamContext =>
+            Http3Api.OnCreateServerControlStream = testStreamContext =>
             {
-                var controlStream = new Microsoft.AspNetCore.Testing.Http3ControlStream(Http3, testStreamContext);
+                var controlStream = new Microsoft.AspNetCore.Testing.Http3ControlStream(Http3Api, testStreamContext);
 
                 // Make server connection error when trying to write to control stream.
                 controlStream.StreamContext.Transport.Output.Complete();
@@ -170,9 +170,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 return controlStream;
             };
 
-            await Http3.InitializeConnectionAsync(_noopApplication);
+            await Http3Api.InitializeConnectionAsync(_noopApplication);
 
-            Http3.AssertConnectionError<Http3ConnectionErrorException>(
+            Http3Api.AssertConnectionError<Http3ConnectionErrorException>(
                 expectedErrorCode: Http3ErrorCode.ClosedCriticalStream,
                 expectedErrorMessage: CoreStrings.Http3ControlStreamErrorInitializingOutbound);
         }
@@ -180,9 +180,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         [Fact]
         public async Task SETTINGS_MaxFieldSectionSizeSent_ServerReceivesValue()
         {
-            await Http3.InitializeConnectionAsync(_echoApplication);
+            await Http3Api.InitializeConnectionAsync(_echoApplication);
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             var incomingSettings = await inboundControlStream.ExpectSettingsAsync();
 
             var defaultLimits = new KestrelServerLimits();
@@ -193,13 +193,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                     Assert.Equal(defaultLimits.MaxRequestHeadersTotalSize, kvp.Value);
                 });
 
-            var outboundcontrolStream = await Http3.CreateControlStream();
+            var outboundcontrolStream = await Http3Api.CreateControlStream();
             await outboundcontrolStream.SendSettingsAsync(new List<Http3PeerSetting>
             {
                 new Http3PeerSetting(Http3SettingType.MaxFieldSectionSize, 100)
             });
 
-            var maxFieldSetting = await Http3.ServerReceivedSettingsReader.ReadAsync().DefaultTimeout();
+            var maxFieldSetting = await Http3Api.ServerReceivedSettingsReader.ReadAsync().DefaultTimeout();
 
             Assert.Equal(Http3SettingType.MaxFieldSectionSize, maxFieldSetting.Key);
             Assert.Equal(100, maxFieldSetting.Value);
@@ -216,9 +216,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 new KeyValuePair<string, string>(HeaderNames.Authority, "localhost:80"),
             };
 
-            await Http3.InitializeConnectionAsync(_echoApplication);
+            await Http3Api.InitializeConnectionAsync(_echoApplication);
 
-            var requestStream = await Http3.CreateRequestStream();
+            var requestStream = await Http3Api.CreateRequestStream();
             var streamContext1 = requestStream.StreamContext;
 
             await requestStream.SendHeadersAsync(headers);
@@ -236,7 +236,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
 
             Assert.True(requestStream.Disposed);
 
-            requestStream = await Http3.CreateRequestStream();
+            requestStream = await Http3Api.CreateRequestStream();
             var streamContext2 = requestStream.StreamContext;
 
             await requestStream.SendHeadersAsync(headers);

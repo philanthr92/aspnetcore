@@ -44,7 +44,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         protected static readonly byte[] _helloWorldBytes = Encoding.ASCII.GetBytes("hello, world");
         protected static readonly byte[] _maxData = Encoding.ASCII.GetBytes(new string('a', 16 * 1024));
 
-        internal Http3InMemory Http3 { get; private set; }
+        internal Http3InMemory Http3Api { get; private set; }
 
         internal TestServiceContext _serviceContext;
         internal readonly Mock<ITimeoutHandler> _mockTimeoutHandler = new Mock<ITimeoutHandler>();
@@ -144,7 +144,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 Scheduler = PipeScheduler.Inline,
             };
 
-            Http3 = new Http3InMemory(_serviceContext, _serviceContext.MockSystemClock, _mockTimeoutHandler.Object);
+            Http3Api = new Http3InMemory(_serviceContext, _serviceContext.MockSystemClock, _mockTimeoutHandler.Object);
         }
 
         public void AssertExpectedErrorMessages(string expectedErrorMessage)

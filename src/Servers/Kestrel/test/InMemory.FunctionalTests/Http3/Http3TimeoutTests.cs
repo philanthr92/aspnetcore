@@ -26,23 +26,23 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             var now = _serviceContext.MockSystemClock.UtcNow;
             var limits = _serviceContext.ServerOptions.Limits;
 
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(_noopApplication).DefaultTimeout();
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(_noopApplication).DefaultTimeout();
 
-            var controlStream = await Http3.GetInboundControlStream().DefaultTimeout();
+            var controlStream = await Http3Api.GetInboundControlStream().DefaultTimeout();
             await controlStream.ExpectSettingsAsync().DefaultTimeout();
 
             await requestStream.OnStreamCreatedTask.DefaultTimeout();
 
-            var serverRequestStream = Http3.Connection._streams[requestStream.StreamId];
+            var serverRequestStream = Http3Api.Connection._streams[requestStream.StreamId];
 
             await requestStream.SendHeadersPartialAsync().DefaultTimeout();
 
-            Http3.TriggerTick(now);
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout);
+            Http3Api.TriggerTick(now);
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout);
 
             Assert.Equal((now + limits.RequestHeadersTimeout).Ticks, serverRequestStream.HeaderTimeoutTicks);
 
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
 
             await requestStream.WaitForStreamErrorAsync(
                 Http3ErrorCode.RequestRejected,
@@ -63,17 +63,17 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 new KeyValuePair<string, string>(HeaderNames.Authority, "localhost:80"),
             };
 
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(_noopApplication).DefaultTimeout();
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(_noopApplication).DefaultTimeout();
 
-            var controlStream = await Http3.GetInboundControlStream().DefaultTimeout();
+            var controlStream = await Http3Api.GetInboundControlStream().DefaultTimeout();
             await controlStream.ExpectSettingsAsync().DefaultTimeout();
 
             await requestStream.OnStreamCreatedTask.DefaultTimeout();
 
-            var serverRequestStream = Http3.Connection._streams[requestStream.StreamId];
+            var serverRequestStream = Http3Api.Connection._streams[requestStream.StreamId];
 
-            Http3.TriggerTick(now);
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout);
+            Http3Api.TriggerTick(now);
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout);
 
             Assert.Equal((now + limits.RequestHeadersTimeout).Ticks, serverRequestStream.HeaderTimeoutTicks);
 
@@ -81,7 +81,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
 
             await requestStream.OnHeaderReceivedTask.DefaultTimeout();
 
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
 
             await requestStream.SendDataAsync(Memory<byte>.Empty, endStream: true);
 
@@ -103,23 +103,23 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 new KeyValuePair<string, string>(HeaderNames.Authority, "localhost:80"),
             };
 
-            await Http3.InitializeConnectionAsync(_noopApplication).DefaultTimeout();
+            await Http3Api.InitializeConnectionAsync(_noopApplication).DefaultTimeout();
 
-            var controlStream = await Http3.GetInboundControlStream().DefaultTimeout();
+            var controlStream = await Http3Api.GetInboundControlStream().DefaultTimeout();
             await controlStream.ExpectSettingsAsync().DefaultTimeout();
 
-            var outboundControlStream = await Http3.CreateControlStream(id: null);
+            var outboundControlStream = await Http3Api.CreateControlStream(id: null);
 
             await outboundControlStream.OnStreamCreatedTask.DefaultTimeout();
 
-            var serverInboundControlStream = Http3.Connection._streams[outboundControlStream.StreamId];
+            var serverInboundControlStream = Http3Api.Connection._streams[outboundControlStream.StreamId];
 
-            Http3.TriggerTick(now);
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout);
+            Http3Api.TriggerTick(now);
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout);
 
             Assert.Equal((now + limits.RequestHeadersTimeout).Ticks, serverInboundControlStream.HeaderTimeoutTicks);
 
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
 
             await outboundControlStream.WaitForStreamErrorAsync(
                 Http3ErrorCode.StreamCreationError,
@@ -140,23 +140,23 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 new KeyValuePair<string, string>(HeaderNames.Authority, "localhost:80"),
             };
 
-            await Http3.InitializeConnectionAsync(_noopApplication).DefaultTimeout();
+            await Http3Api.InitializeConnectionAsync(_noopApplication).DefaultTimeout();
 
-            var controlStream = await Http3.GetInboundControlStream().DefaultTimeout();
+            var controlStream = await Http3Api.GetInboundControlStream().DefaultTimeout();
             await controlStream.ExpectSettingsAsync().DefaultTimeout();
 
-            var outboundControlStream = await Http3.CreateControlStream(id: null);
+            var outboundControlStream = await Http3Api.CreateControlStream(id: null);
 
             await outboundControlStream.OnStreamCreatedTask.DefaultTimeout();
 
-            Http3.TriggerTick(now);
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout);
+            Http3Api.TriggerTick(now);
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout);
 
             await outboundControlStream.WriteStreamIdAsync(id: 0);
 
             await outboundControlStream.OnHeaderReceivedTask.DefaultTimeout();
 
-            Http3.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
+            Http3Api.TriggerTick(now + limits.RequestHeadersTimeout + TimeSpan.FromTicks(1));
         }
 
         [Fact]
@@ -174,18 +174,18 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 new KeyValuePair<string, string>(HeaderNames.Authority, "localhost:80"),
             };
 
-            await Http3.InitializeConnectionAsync(_noopApplication).DefaultTimeout();
+            await Http3Api.InitializeConnectionAsync(_noopApplication).DefaultTimeout();
 
-            var controlStream = await Http3.GetInboundControlStream().DefaultTimeout();
+            var controlStream = await Http3Api.GetInboundControlStream().DefaultTimeout();
             await controlStream.ExpectSettingsAsync().DefaultTimeout();
 
-            var outboundControlStream = await Http3.CreateControlStream(id: null);
+            var outboundControlStream = await Http3Api.CreateControlStream(id: null);
 
             await outboundControlStream.OnStreamCreatedTask.DefaultTimeout();
 
-            var serverInboundControlStream = Http3.Connection._streams[outboundControlStream.StreamId];
+            var serverInboundControlStream = Http3Api.Connection._streams[outboundControlStream.StreamId];
 
-            Http3.TriggerTick(now);
+            Http3Api.TriggerTick(now);
 
             Assert.Equal(TimeSpan.MaxValue.Ticks, serverInboundControlStream.HeaderTimeoutTicks);
         }
@@ -199,11 +199,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Use non-default value to ensure the min request and response rates aren't mixed up.
             limits.MinRequestBodyDataRate = new MinDataRate(480, TimeSpan.FromSeconds(2.5));
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(_readRateApplication);
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(_readRateApplication);
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             await inboundControlStream.ExpectSettingsAsync();
 
             // _helloWorldBytes is 12 bytes, and 12 bytes / 240 bytes/sec = .05 secs which is far below the grace period.
@@ -215,15 +215,15 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             await requestStream.ExpectDataAsync();
 
             // Don't send any more data and advance just to and then past the grace period.
-            Http3.AdvanceClock(limits.MinRequestBodyDataRate.GracePeriod);
+            Http3Api.AdvanceClock(limits.MinRequestBodyDataRate.GracePeriod);
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromTicks(1));
+            Http3Api.AdvanceClock(TimeSpan.FromTicks(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(TimeoutReason.ReadDataRate), Times.Once);
 
-            await Http3.WaitForConnectionErrorAsync<ConnectionAbortedException>(
+            await Http3Api.WaitForConnectionErrorAsync<ConnectionAbortedException>(
                 ignoreNonGoAwayFrames: false,
                 expectedLastStreamId: 8,
                 Http3ErrorCode.InternalError,
@@ -303,10 +303,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Disable response buffering so "socket" backpressure is observed immediately.
             limits.MaxResponseBufferSize = 0;
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
             var app = new EchoAppWithNotification();
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(app.RunApp);
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(app.RunApp);
 
             await requestStream.SendHeadersAsync(_browserRequestHeaders, endStream: false);
             await requestStream.SendDataAsync(_helloWorldBytes, endStream: true);
@@ -316,15 +316,15 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             await app.WriteStartedTask.DefaultTimeout();
 
             // Complete timing of the request body so we don't induce any unexpected request body rate timeouts.
-            Http3._timeoutControl.Tick(mockSystemClock.UtcNow);
+            Http3Api._timeoutControl.Tick(mockSystemClock.UtcNow);
 
             // Don't read data frame to induce "socket" backpressure.
-            Http3.AdvanceClock(TimeSpan.FromSeconds((requestStream.BytesReceived + _helloWorldBytes.Length) / limits.MinResponseDataRate.BytesPerSecond) +
+            Http3Api.AdvanceClock(TimeSpan.FromSeconds((requestStream.BytesReceived + _helloWorldBytes.Length) / limits.MinResponseDataRate.BytesPerSecond) +
                 limits.MinResponseDataRate.GracePeriod + Heartbeat.Interval - TimeSpan.FromSeconds(.5));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromSeconds(1));
+            Http3Api.AdvanceClock(TimeSpan.FromSeconds(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(TimeoutReason.WriteDataRate), Times.Once);
 
@@ -347,10 +347,10 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Disable response buffering so "socket" backpressure is observed immediately.
             limits.MaxResponseBufferSize = 0;
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
             var app = new EchoAppWithNotification();
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(app.RunApp);
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(app.RunApp);
 
             await requestStream.SendHeadersAsync(_browserRequestHeaders, endStream: false);
             await requestStream.SendDataAsync(_maxData, endStream: true);
@@ -360,17 +360,17 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             await app.WriteStartedTask.DefaultTimeout();
 
             // Complete timing of the request body so we don't induce any unexpected request body rate timeouts.
-            Http3._timeoutControl.Tick(mockSystemClock.UtcNow);
+            Http3Api._timeoutControl.Tick(mockSystemClock.UtcNow);
 
             var timeToWriteMaxData = TimeSpan.FromSeconds((requestStream.BytesReceived + _maxData.Length) / limits.MinResponseDataRate.BytesPerSecond) +
                 limits.MinResponseDataRate.GracePeriod + Heartbeat.Interval - TimeSpan.FromSeconds(.5);
 
             // Don't read data frame to induce "socket" backpressure.
-            Http3.AdvanceClock(timeToWriteMaxData);
+            Http3Api.AdvanceClock(timeToWriteMaxData);
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromSeconds(1));
+            Http3Api.AdvanceClock(TimeSpan.FromSeconds(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(TimeoutReason.WriteDataRate), Times.Once);
 
@@ -389,11 +389,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Use non-default value to ensure the min request and response rates aren't mixed up.
             limits.MinRequestBodyDataRate = new MinDataRate(480, TimeSpan.FromSeconds(2.5));
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(_readRateApplication);
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(_readRateApplication);
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             await inboundControlStream.ExpectSettingsAsync();
 
             // _maxData is 16 KiB, and 16 KiB / 240 bytes/sec ~= 68 secs which is far above the grace period.
@@ -409,15 +409,15 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             var timeToReadMaxData = TimeSpan.FromSeconds(_maxData.Length / limits.MinRequestBodyDataRate.BytesPerSecond) - TimeSpan.FromSeconds(.5);
 
             // Don't send any more data and advance just to and then past the rate timeout.
-            Http3.AdvanceClock(timeToReadMaxData);
+            Http3Api.AdvanceClock(timeToReadMaxData);
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromSeconds(1));
+            Http3Api.AdvanceClock(TimeSpan.FromSeconds(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(TimeoutReason.ReadDataRate), Times.Once);
 
-            await Http3.WaitForConnectionErrorAsync<ConnectionAbortedException>(
+            await Http3Api.WaitForConnectionErrorAsync<ConnectionAbortedException>(
                 ignoreNonGoAwayFrames: false,
                 expectedLastStreamId: null,
                 Http3ErrorCode.InternalError,
@@ -435,14 +435,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Use non-default value to ensure the min request and response rates aren't mixed up.
             limits.MinRequestBodyDataRate = new MinDataRate(480, TimeSpan.FromSeconds(2.5));
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
-            await Http3.InitializeConnectionAsync(_readRateApplication);
+            await Http3Api.InitializeConnectionAsync(_readRateApplication);
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             await inboundControlStream.ExpectSettingsAsync();
 
-            var requestStream1 = await Http3.CreateRequestStream();
+            var requestStream1 = await Http3Api.CreateRequestStream();
 
             // _maxData is 16 KiB, and 16 KiB / 240 bytes/sec ~= 68 secs which is far above the grace period.
             await requestStream1.SendHeadersAsync(ReadRateRequestHeaders(_maxData.Length), endStream: false);
@@ -451,7 +451,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             await requestStream1.ExpectHeadersAsync();
             await requestStream1.ExpectDataAsync();
 
-            var requestStream2 = await Http3.CreateRequestStream();
+            var requestStream2 = await Http3Api.CreateRequestStream();
 
             await requestStream2.SendHeadersAsync(ReadRateRequestHeaders(_maxData.Length), endStream: false);
             await requestStream2.SendDataAsync(_maxData, endStream: false);
@@ -468,15 +468,15 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             timeToReadMaxData -= TimeSpan.FromSeconds(.5);
 
             // Don't send any more data and advance just to and then past the rate timeout.
-            Http3.AdvanceClock(timeToReadMaxData);
+            Http3Api.AdvanceClock(timeToReadMaxData);
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromSeconds(1));
+            Http3Api.AdvanceClock(TimeSpan.FromSeconds(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(TimeoutReason.ReadDataRate), Times.Once);
 
-            await Http3.WaitForConnectionErrorAsync<ConnectionAbortedException>(
+            await Http3Api.WaitForConnectionErrorAsync<ConnectionAbortedException>(
                 ignoreNonGoAwayFrames: false,
                 expectedLastStreamId: null,
                 Http3ErrorCode.InternalError,
@@ -494,14 +494,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Use non-default value to ensure the min request and response rates aren't mixed up.
             limits.MinRequestBodyDataRate = new MinDataRate(480, TimeSpan.FromSeconds(2.5));
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
-            await Http3.InitializeConnectionAsync(_readRateApplication);
+            await Http3Api.InitializeConnectionAsync(_readRateApplication);
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             await inboundControlStream.ExpectSettingsAsync();
 
-            var requestStream1 = await Http3.CreateRequestStream();
+            var requestStream1 = await Http3Api.CreateRequestStream();
 
             // _maxData is 16 KiB, and 16 KiB / 240 bytes/sec ~= 68 secs which is far above the grace period.
             await requestStream1.SendHeadersAsync(ReadRateRequestHeaders(_maxData.Length), endStream: false);
@@ -512,7 +512,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
 
             await requestStream1.ExpectReceiveEndOfStream();
 
-            var requestStream2 = await Http3.CreateRequestStream();
+            var requestStream2 = await Http3Api.CreateRequestStream();
 
             await requestStream2.SendHeadersAsync(ReadRateRequestHeaders(_maxData.Length), endStream: false);
             await requestStream2.SendDataAsync(_maxData, endStream: false);
@@ -525,15 +525,15 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             var timeToReadMaxData = TimeSpan.FromSeconds(_maxData.Length / limits.MinRequestBodyDataRate.BytesPerSecond) - TimeSpan.FromSeconds(.5);
 
             // Don't send any more data and advance just to and then past the rate timeout.
-            Http3.AdvanceClock(timeToReadMaxData);
+            Http3Api.AdvanceClock(timeToReadMaxData);
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromSeconds(1));
+            Http3Api.AdvanceClock(TimeSpan.FromSeconds(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(TimeoutReason.ReadDataRate), Times.Once);
 
-            await Http3.WaitForConnectionErrorAsync<ConnectionAbortedException>(
+            await Http3Api.WaitForConnectionErrorAsync<ConnectionAbortedException>(
                 ignoreNonGoAwayFrames: false,
                 expectedLastStreamId: null,
                 Http3ErrorCode.InternalError,
@@ -551,16 +551,16 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             // Use non-default value to ensure the min request and response rates aren't mixed up.
             limits.MinRequestBodyDataRate = new MinDataRate(480, TimeSpan.FromSeconds(2.5));
 
-            Http3._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
+            Http3Api._timeoutControl.Initialize(mockSystemClock.UtcNow.Ticks);
 
-            var requestStream = await Http3.InitializeConnectionAndStreamsAsync(context =>
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(context =>
             {
                // Completely disable rate limiting for this stream.
                context.Features.Get<IHttpMinRequestBodyDataRateFeature>().MinDataRate = null;
                 return _readRateApplication(context);
             });
 
-            var inboundControlStream = await Http3.GetInboundControlStream();
+            var inboundControlStream = await Http3Api.GetInboundControlStream();
             await inboundControlStream.ExpectSettingsAsync();
 
             // _helloWorldBytes is 12 bytes, and 12 bytes / 240 bytes/sec = .05 secs which is far below the grace period.
@@ -572,11 +572,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             await requestStream.ExpectDataAsync();
 
             // Don't send any more data and advance just to and then past the grace period.
-            Http3.AdvanceClock(limits.MinRequestBodyDataRate.GracePeriod);
+            Http3Api.AdvanceClock(limits.MinRequestBodyDataRate.GracePeriod);
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
-            Http3.AdvanceClock(TimeSpan.FromTicks(1));
+            Http3Api.AdvanceClock(TimeSpan.FromTicks(1));
 
             _mockTimeoutHandler.Verify(h => h.OnTimeout(It.IsAny<TimeoutReason>()), Times.Never);
 
