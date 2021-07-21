@@ -23,30 +23,8 @@ namespace Microsoft.AspNetCore.BenchmarkDotNet.Runner
 
         static partial void BeforeMain(string[] args);
 
-        private static async Task<int> Main(string[] args)
+        private static int Main(string[] args)
         {
-#if !TEST
-            var test = new Microsoft.AspNetCore.Server.Kestrel.Microbenchmarks.Http3ConnectionEmptyBenchmark();
-            test.GlobalSetup();
-
-            Console.WriteLine("Start");
-
-            try
-            {
-                for (int i = 0; i < 500000; i++)
-                {
-                    await test.MakeRequest();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                throw;
-            }
-
-            Console.WriteLine("Done");
-            return 0;
-#else
             BeforeMain(args);
 
             AssignConfiguration(ref args);
@@ -80,7 +58,6 @@ namespace Microsoft.AspNetCore.BenchmarkDotNet.Runner
             }
 
             return 0;
-#endif
         }
 
         private static int Fail(object o, string message)
@@ -104,7 +81,7 @@ namespace Microsoft.AspNetCore.BenchmarkDotNet.Runner
             }
 
             var index = argsList.IndexOf("--config");
-            if (index >= 0 && index < argsList.Count -1)
+            if (index >= 0 && index < argsList.Count - 1)
             {
                 AspNetCoreBenchmarkAttribute.ConfigName = argsList[index + 1];
                 argsList.RemoveAt(index + 1);
