@@ -161,7 +161,7 @@ namespace Microsoft.AspNetCore.Builder
 
             // Implicitly call UseEndpoints() at the end of the pipeline if UseRouting() was called implicitly.
             // We could add this to the end of _buildApplication instead if UseEndpoints() was not so picky about
-            // being called with the same IApplicationBluilder instance as UseRouting().
+            // being called with the same IApplicationBuillder instance as UseRouting().
             if (implicitRouting)
             {
                 app.UseEndpoints(_ => { });
