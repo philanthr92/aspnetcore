@@ -269,7 +269,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http3
                         }
                         else
                         {
-                            var persistentStateFeature = streamContext.Features.Get<IPersistentStateFeature>()!;
+                            var persistentStateFeature = streamContext.Features.Get<IPersistentStateFeature>();
+                            Debug.Assert(persistentStateFeature != null, $"Required {nameof(IPersistentStateFeature)} not on stream context.");
 
                             // Request stream
                             UpdateHighestStreamId(streamIdFeature.StreamId);

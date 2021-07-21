@@ -101,7 +101,11 @@ namespace Microsoft.AspNetCore.Testing
             if (_inboundControlStream == null)
             {
                 var reader = MultiplexedConnectionContext.ToClientAcceptQueue.Reader;
+#if IS_FUNCTIONAL_TESTS
+                while (await reader.WaitToReadAsync().DefaultTimeout())
+#else
                 while (await reader.WaitToReadAsync())
+#endif
                 {
                     while (reader.TryRead(out var stream))
                     {
@@ -150,7 +154,11 @@ namespace Microsoft.AspNetCore.Testing
             AssertConnectionError<TException>(expectedErrorCode, matchExpectedErrorMessage, expectedErrorMessage);
 
             // Verify HttpConnection.ProcessRequestsAsync has exited.
+#if IS_FUNCTIONAL_TESTS
+            await _connectionTask.DefaultTimeout();
+#else
             await _connectionTask;
+#endif
 
             // Verify server-to-client control stream has completed.
             await _inboundControlStream.ReceiveEndAsync();
@@ -431,17 +439,34 @@ namespace Microsoft.AspNetCore.Testing
 
         protected static Task FlushAsync(PipeWriter writableBuffer)
         {
-            return writableBuffer.FlushAsync().GetAsTask();
+            var task = writableBuffer.FlushAsync();
+#if IS_FUNCTIONAL_TESTS
+            return task.AsTask().DefaultTimeout();
+#else
+            return task.GetAsTask();
+#endif
         }
 
         internal async Task ReceiveEndAsync()
         {
-            var result = await _pair.Application.Input.ReadAsync();
+            var result = await ReadApplicationInputAsync();
             if (!result.IsCompleted)
             {
                 throw new InvalidOperationException("End not received.");
             }
         }
+
+#if IS_FUNCTIONAL_TESTS
+        protected Task<ReadResult> ReadApplicationInputAsync()
+        {
+            return _pair.Application.Input.ReadAsync().AsTask().DefaultTimeout();
+        }
+#else
+        protected ValueTask<ReadResult> ReadApplicationInputAsync()
+        {
+            return _pair.Application.Input.ReadAsync();
+        }
+#endif
 
         internal async ValueTask<Http3FrameWithPayload> ReceiveFrameAsync(bool expectEnd = false, bool allowEnd = false, Http3FrameWithPayload frame = null)
         {
@@ -449,7 +474,7 @@ namespace Microsoft.AspNetCore.Testing
 
             while (true)
             {
-                var result = await _pair.Application.Input.ReadAsync();
+                var result = await ReadApplicationInputAsync();
                 var buffer = result.Buffer;
                 var consumed = buffer.Start;
                 var examined = buffer.Start;
@@ -529,8 +554,8 @@ namespace Microsoft.AspNetCore.Testing
 
         internal async Task WaitForStreamErrorAsync(Http3ErrorCode protocolError, Action<string> matchExpectedErrorMessage = null, string expectedErrorMessage = null)
         {
-            var readResult = await _pair.Application.Input.ReadAsync();
-            if (!readResult.IsCompleted)
+            var result = await ReadApplicationInputAsync();
+            if (!result.IsCompleted)
             {
                 throw new InvalidOperationException("Stream not ended.");
             }
@@ -636,7 +661,7 @@ namespace Microsoft.AspNetCore.Testing
 
         internal async Task ExpectReceiveEndOfStream()
         {
-            var result = await _pair.Application.Input.ReadAsync();
+            var result = await ReadApplicationInputAsync();
             if (!result.IsCompleted)
             {
                 throw new InvalidOperationException("End of stream not received.");
@@ -794,7 +819,7 @@ namespace Microsoft.AspNetCore.Testing
         {
             while (true)
             {
-                var result = await _pair.Application.Input.ReadAsync();
+                var result = await ReadApplicationInputAsync();
                 var readableBuffer = result.Buffer;
                 var consumed = readableBuffer.Start;
                 var examined = readableBuffer.End;
@@ -910,7 +935,7 @@ namespace Microsoft.AspNetCore.Testing
         }
     }
 
-    internal class TestStreamContext : ConnectionContext, IStreamDirectionFeature, IStreamIdFeature, IProtocolErrorCodeFeature
+    internal class TestStreamContext : ConnectionContext, IStreamDirectionFeature, IStreamIdFeature, IProtocolErrorCodeFeature, IPersistentStateFeature
     {
         private readonly Http3InMemory _testBase;
 
@@ -922,6 +947,9 @@ namespace Microsoft.AspNetCore.Testing
 
         private bool _isAborted;
         private bool _isComplete;
+
+        // Persistent state collection is not reset with a stream by design.
+        private IDictionary<object, object> _persistentState;
 
         public TestStreamContext(bool canRead, bool canWrite, Http3InMemory testBase)
         {
@@ -967,6 +995,7 @@ namespace Microsoft.AspNetCore.Testing
             Features.Set<IStreamDirectionFeature>(this);
             Features.Set<IStreamIdFeature>(this);
             Features.Set<IProtocolErrorCodeFeature>(this);
+            Features.Set<IPersistentStateFeature>(this);
 
             StreamId = streamId;
 
@@ -1024,6 +1053,15 @@ namespace Microsoft.AspNetCore.Testing
         internal void Complete()
         {
             _isComplete = true;
+        }
+
+        IDictionary<object, object> IPersistentStateFeature.State
+        {
+            get
+            {
+                // Lazily allocate persistent state
+                return _persistentState ?? (_persistentState = new ConnectionItems());
+            }
         }
     }
 }
