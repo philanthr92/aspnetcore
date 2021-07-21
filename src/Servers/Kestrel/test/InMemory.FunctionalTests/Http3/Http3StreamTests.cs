@@ -58,7 +58,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 new KeyValuePair<string, string>(HeaderNames.Authority, "localhost:80"),
             };
 
-            var requestStream = await InitializeConnectionAndStreamsAsync(context =>
+            var requestStream = await Http3Api.InitializeConnectionAndStreamsAsync(context =>
             {
                 context.Response.StatusCode = 401;
                 return Task.CompletedTask;
